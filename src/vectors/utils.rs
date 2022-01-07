@@ -11,31 +11,23 @@ impl Display for Vec3 {
     }
 }
 
-impl<'a, 'b> ops::Add<&'b Vec3> for &'a Vec3 {
+impl ops::Add<Vec3> for Vec3 {
     type Output = Vec3;
 
-    fn add(self, rhs: &'b Vec3) -> Self::Output {
+    fn add(self, rhs: Vec3) -> Self::Output {
         Vec3::new(self[0] + rhs[0], self[1] + rhs[1], self[2] + rhs[2])
     }
 }
 
-impl<'a, 'b> ops::Sub<&'b Vec3> for &'a Vec3 {
+impl ops::Mul<Vec3> for Vec3 {
     type Output = Vec3;
 
-    fn sub(self, rhs: &'b Vec3) -> Self::Output {
-        Vec3::new(self[0] - rhs[0], self[1] - rhs[1], self[2] - rhs[2])
-    }
-}
-
-impl<'a, 'b> ops::Mul<&'b Vec3> for &'a Vec3 {
-    type Output = Vec3;
-
-    fn mul(self, rhs: &'b Vec3) -> Self::Output {
+    fn mul(self, rhs: Vec3) -> Self::Output {
         Vec3::new(self[0] * rhs[0], self[1] * rhs[1], self[2] * rhs[2])
     }
 }
 
-impl<'a, T: Into<f64>> ops::Mul<T> for &'a Vec3 {
+impl<T: Into<f64>> ops::Mul<T> for Vec3 {
     type Output = Vec3;
 
     fn mul(self, rhs: T) -> Self::Output {
@@ -44,15 +36,15 @@ impl<'a, T: Into<f64>> ops::Mul<T> for &'a Vec3 {
     }
 }
 
-impl<'a> ops::Mul<&'a Vec3> for f64 {
+impl ops::Mul<Vec3> for f64 {
     type Output = Vec3;
 
-    fn mul(self, rhs: &'a Vec3) -> Self::Output {
+    fn mul(self, rhs: Vec3) -> Self::Output {
         rhs * self
     }
 }
 
-impl<'a, T: Into<f64>> ops::Div<T> for &'a Vec3 {
+impl<T: Into<f64>> ops::Div<T> for Vec3 {
     type Output = Vec3;
 
     fn div(self, rhs: T) -> Self::Output {
@@ -80,6 +72,6 @@ impl Vec3 {
     #[inline]
     #[must_use]
     pub fn unit_vector(&self) -> Self {
-        self / self.length()
+        *self / self.length()
     }
 }

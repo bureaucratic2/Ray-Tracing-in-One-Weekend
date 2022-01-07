@@ -15,7 +15,7 @@ mod test {
     #[test]
     fn div() {
         let v = Vec3::new(2, 4, 6);
-        let divided = &v / 2;
+        let divided = v / 2;
         assert_eq!(divided, Vec3::new(1.0, 2.0, 3.0));
     }
 

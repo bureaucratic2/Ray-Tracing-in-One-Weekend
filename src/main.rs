@@ -1,4 +1,4 @@
-use ray_tracing::{Color, Point3, Vec3};
+use ray_tracing::{Color, Point3, Ray, Vec3};
 use std::{fs::File, io::Write};
 
 fn main() {
@@ -15,8 +15,7 @@ fn main() {
     let origin = Point3::default();
     let horizontal = Vec3::new(viewport_width, 0, 0);
     let vertical = Vec3::new(0, viewport_height, 0);
-    let lower_left_center =
-        -origin - &horizontal / 2 - &vertical / 2 - Vec3::new(0, 0, focal_length);
+    let lower_left_center = -origin - horizontal / 2 - vertical / 2 - Vec3::new(0, 0, focal_length);
 
     let mut f = File::create("image.ppm").unwrap();
     f.write_all(format!("P3\n{} {}\n255\n", image_width, image_height).as_bytes())
@@ -25,6 +24,9 @@ fn main() {
     for j in (0..image_height).rev() {
         eprintln!("Scanlines remaining: {}", j);
         for i in 0..image_width {
+            let u = i as f64 / (image_width - 1) as f64;
+            let v = j as f64 / (image_height - 1) as f64;
+            let ray = Ray::new(origin, lower_left_center + u * horizontal + v * vertical);
             let color = Color::new(
                 i as f64 / (image_width - 1) as f64,
                 j as f64 / (image_height - 1) as f64,

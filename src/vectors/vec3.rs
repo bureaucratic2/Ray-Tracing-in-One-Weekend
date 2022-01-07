@@ -89,16 +89,18 @@ impl ops::AddAssign for Vec3 {
     }
 }
 
-impl ops::MulAssign<f64> for Vec3 {
-    fn mul_assign(&mut self, rhs: f64) {
+impl<T: Into<f64>> ops::MulAssign<T> for Vec3 {
+    fn mul_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
         for e in self.e.iter_mut() {
             *e *= rhs;
         }
     }
 }
 
-impl ops::DivAssign<f64> for Vec3 {
-    fn div_assign(&mut self, rhs: f64) {
+impl<T: Into<f64>> ops::DivAssign<T> for Vec3 {
+    fn div_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
         *self *= 1.0 / rhs;
     }
 }
