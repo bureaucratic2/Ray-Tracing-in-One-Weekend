@@ -35,10 +35,11 @@ impl<'a, 'b> ops::Mul<&'b Vec3> for &'a Vec3 {
     }
 }
 
-impl<'a> ops::Mul<f64> for &'a Vec3 {
+impl<'a, T: Into<f64>> ops::Mul<T> for &'a Vec3 {
     type Output = Vec3;
 
-    fn mul(self, rhs: f64) -> Self::Output {
+    fn mul(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
         Vec3::new(self[0] * rhs, self[1] * rhs, self[2] * rhs)
     }
 }
@@ -51,10 +52,11 @@ impl<'a> ops::Mul<&'a Vec3> for f64 {
     }
 }
 
-impl<'a> ops::Div<f64> for &'a Vec3 {
+impl<'a, T: Into<f64>> ops::Div<T> for &'a Vec3 {
     type Output = Vec3;
 
-    fn div(self, rhs: f64) -> Self::Output {
+    fn div(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
         (1.0 / rhs) * self
     }
 }

@@ -6,8 +6,11 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
-    pub fn new(e0: f64, e1: f64, e2: f64) -> Self {
-        Self { e: [e0, e1, e2] }
+    /// awkawrd walkthrough to allow usage like Vec3::new(1.3, 2, 5/4)
+    pub fn new<T: Into<f64>, U: Into<f64>, W: Into<f64>>(e0: T, e1: U, e2: W) -> Self {
+        Self {
+            e: [e0.into(), e1.into(), e2.into()],
+        }
     }
 
     #[inline]
@@ -46,10 +49,9 @@ impl ops::Sub for Vec3 {
     type Output = Vec3;
 
     fn sub(mut self, rhs: Self) -> Self::Output {
-        self.e[0] -= rhs.e[0];
-        self.e[1] -= rhs.e[1];
-        self.e[2] -= rhs.e[2];
-
+        for (i, e) in self.e.iter_mut().enumerate() {
+            *e -= rhs[i];
+        }
         self
     }
 }
@@ -58,9 +60,9 @@ impl ops::Neg for Vec3 {
     type Output = Vec3;
 
     fn neg(mut self) -> Self::Output {
-        self.e[0] = -self.e[0];
-        self.e[1] = -self.e[1];
-        self.e[2] = -self.e[2];
+        for e in self.e.iter_mut() {
+            *e = -*e;
+        }
         self
     }
 }
@@ -81,17 +83,17 @@ impl ops::IndexMut<usize> for Vec3 {
 
 impl ops::AddAssign for Vec3 {
     fn add_assign(&mut self, rhs: Self) {
-        self.e[0] += rhs.e[0];
-        self.e[1] += rhs.e[1];
-        self.e[2] += rhs.e[2];
+        for (i, e) in self.e.iter_mut().enumerate() {
+            *e += rhs[i];
+        }
     }
 }
 
 impl ops::MulAssign<f64> for Vec3 {
     fn mul_assign(&mut self, rhs: f64) {
-        self.e[0] *= rhs;
-        self.e[1] *= rhs;
-        self.e[2] *= rhs;
+        for e in self.e.iter_mut() {
+            *e *= rhs;
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 pub use color::Color;
 pub use ray::Ray;
 pub use vec3::Vec3;
+pub use vec3::Vec3 as Point3;
 
 mod color;
 mod ray;
@@ -10,6 +11,13 @@ mod vec3;
 #[cfg(test)]
 mod test {
     use crate::vectors::Vec3;
+
+    #[test]
+    fn div() {
+        let v = Vec3::new(2, 4, 6);
+        let divided = &v / 2;
+        assert_eq!(divided, Vec3::new(1.0, 2.0, 3.0));
+    }
 
     #[test]
     fn div_assign() {
