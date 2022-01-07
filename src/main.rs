@@ -27,11 +27,7 @@ fn main() {
             let u = i as f64 / (image_width - 1) as f64;
             let v = j as f64 / (image_height - 1) as f64;
             let ray = Ray::new(origin, lower_left_center + u * horizontal + v * vertical);
-            let color = Color::new(
-                i as f64 / (image_width - 1) as f64,
-                j as f64 / (image_height - 1) as f64,
-                0.25,
-            );
+            let color = color(&ray);
 
             f.write_all(format!("{}", color).as_bytes()).unwrap();
         }
@@ -40,4 +36,12 @@ fn main() {
     eprintln!("Done");
 
     println!("Hooray! This is the graphics \"hello world\".");
+}
+
+fn color(r: &Ray) -> Color {
+    let unit_direction = r.direction();
+    let t = 0.5 * (unit_direction.y() + 1.0);
+    // Color don't implement ops, so we should manipulate Vec3 first
+    // and then wrap them as Color
+    Color::from((1.0 - t) * Vec3::new(1, 1, 1) + t * Vec3::new(0.5, 0.7, 1))
 }
