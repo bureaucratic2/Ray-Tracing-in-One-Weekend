@@ -1,3 +1,5 @@
+pub use objects::{HittableList, Sphere};
 pub use vectors::{Color, Point3, Ray, Vec3};
 
-pub mod vectors;
+mod objects;
+mod vectors;

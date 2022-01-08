@@ -1,4 +1,7 @@
-use std::fmt::{self, Display};
+use std::{
+    fmt::{self, Display},
+    ops::Deref,
+};
 
 use super::vec3::Vec3;
 
@@ -6,7 +9,7 @@ use super::vec3::Vec3;
 pub struct Color(Vec3);
 
 impl Color {
-    pub fn new(e0: f64, e1: f64, e2: f64) -> Self {
+    pub fn new<T: Into<f64>, U: Into<f64>, W: Into<f64>>(e0: T, e1: U, e2: W) -> Self {
         Self(Vec3::new(e0, e1, e2))
     }
 
@@ -25,5 +28,13 @@ impl Display for Color {
             (self.0[2] * 255.999) as u64
         )?;
         Ok(())
+    }
+}
+
+impl Deref for Color {
+    type Target = Vec3;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
