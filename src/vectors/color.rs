@@ -1,6 +1,6 @@
 use std::{
     fmt::{self, Display},
-    ops::Deref,
+    ops::{Deref, DerefMut},
 };
 
 use super::vec3::Vec3;
@@ -36,5 +36,11 @@ impl Deref for Color {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl DerefMut for Color {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }

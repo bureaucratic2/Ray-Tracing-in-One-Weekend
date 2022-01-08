@@ -8,10 +8,10 @@ use crate::{Point3, Ray, Vec3};
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct HitRecord {
-    p: Point3,
-    normal: Vec3,
-    t: f64,
-    front_face: bool,
+    pub p: Point3,
+    pub normal: Vec3,
+    pub t: f64,
+    pub front_face: bool,
 }
 
 impl HitRecord {

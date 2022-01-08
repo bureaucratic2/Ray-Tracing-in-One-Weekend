@@ -1,19 +1,19 @@
-use std::mem;
+use std::{mem, rc::Rc};
 
 use super::{HitRecord, Hittable};
 use crate::Ray;
 
 #[derive(Default)]
-pub struct HittableList(Vec<Box<dyn Hittable>>);
+pub struct HittableList(Vec<Rc<dyn Hittable>>);
 
 impl HittableList {
-    pub fn new(hittable: Box<dyn Hittable>) -> Self {
+    pub fn new(hittable: Rc<dyn Hittable>) -> Self {
         let mut list = HittableList::default();
         list.add(hittable);
         list
     }
 
-    pub fn add(&mut self, hittable: Box<dyn Hittable>) {
+    pub fn add(&mut self, hittable: Rc<dyn Hittable>) {
         self.0.push(hittable)
     }
 }
