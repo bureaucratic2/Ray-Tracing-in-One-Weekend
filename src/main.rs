@@ -1,5 +1,7 @@
 use rand::Rng;
-use ray_tracing::{Camera, Color, HitRecord, Hittable, HittableList, Point3, Ray, Sphere, Vec3};
+use ray_tracing::{
+    random_unit_vector, Camera, Color, HitRecord, Hittable, HittableList, Point3, Ray, Sphere, Vec3,
+};
 use std::{fs::File, io::Write, rc::Rc};
 
 fn main() {
@@ -8,6 +10,7 @@ fn main() {
     let image_width = 400u64;
     let image_height = (400_f64 / aspect_ratio) as u64;
     let samples_per_pixel = 100;
+    let max_depth = 50;
 
     // Camera
     let camera = Camera::new();
@@ -30,7 +33,7 @@ fn main() {
                 let u = (i as f64 + rng.gen_range(0.0..1.0)) / (image_width - 1) as f64;
                 let v = (j as f64 + rng.gen_range(0.0..1.0)) / (image_height - 1) as f64;
                 let ray = camera.get_ray(u, v);
-                pixel_color += *color(&ray, &list);
+                pixel_color += *ray_color(&ray, &list, max_depth);
             }
             let pixel_color = Color::from(pixel_color);
 
@@ -44,13 +47,19 @@ fn main() {
     println!("Hooray! This is the graphics \"hello world\".");
 }
 
-fn color(r: &Ray, world: &HittableList) -> Color {
+fn ray_color(r: &Ray, world: &HittableList, depth: usize) -> Color {
+    if depth == 0 {
+        return Color::new(0, 0, 0);
+    }
+
     let mut rec = HitRecord::default();
-    if world.hit(r, 0.0, f64::INFINITY, &mut rec) {
-        // map each component(-1~1) to the interval from 0 to 1
-        rec.normal += Vec3::new(1, 1, 1);
-        rec.normal /= 2;
-        return Color::from(rec.normal);
+    if world.hit(r, 0.001, f64::INFINITY, &mut rec) {
+        // // map each component(-1~1) to the interval from 0 to 1
+        // rec.normal += Vec3::new(1, 1, 1);
+        // rec.normal /= 2;
+        // return Color::from(rec.normal);
+        let target = rec.p + rec.normal + random_unit_vector();
+        return Color::from(0.5 * *ray_color(&Ray::new(rec.p, target - rec.p), world, depth - 1));
     }
     let unit_direction = r.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
@@ -61,8 +70,9 @@ fn color(r: &Ray, world: &HittableList) -> Color {
 
 fn write_color<F: Write>(f: &mut F, mut pixel_color: Color, samples_per_pixel: usize) {
     let scale = 1.0 / (samples_per_pixel as f64);
+    // Divide the color by the number of samples and gamma-correct for gamma=2.0.
     for i in 0..3 {
-        pixel_color[i] *= scale;
+        pixel_color[i] = (pixel_color[i] * scale).sqrt();
     }
 
     f.write_all(format!("{}", pixel_color).as_bytes()).unwrap();

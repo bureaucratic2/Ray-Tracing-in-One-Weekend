@@ -1,4 +1,7 @@
 use crate::vectors::vec3::Vec3;
+use crate::RAND;
+use rand::Rng;
+
 use std::{
     fmt::{self, Display},
     ops,
@@ -73,5 +76,17 @@ impl Vec3 {
     #[must_use]
     pub fn unit_vector(&self) -> Self {
         *self / self.length()
+    }
+
+    #[inline]
+    pub fn random<T: Into<f64>, U: Into<f64>>(min: T, max: U) -> Self {
+        let mut rng = RAND.lock().unwrap();
+        let min: f64 = min.into();
+        let max: f64 = max.into();
+        Vec3::new(
+            rng.gen_range(min..max),
+            rng.gen_range(min..max),
+            rng.gen_range(min..max),
+        )
     }
 }

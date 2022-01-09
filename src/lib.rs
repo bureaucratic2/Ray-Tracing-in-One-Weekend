@@ -6,7 +6,18 @@ mod camera;
 mod objects;
 mod vectors;
 
+use lazy_static::lazy_static;
+use rand::prelude::StdRng;
+use rand::prelude::*;
 use std::f64::consts::PI;
+use std::sync::{Arc, Mutex};
+
+lazy_static! {
+    static ref RAND: Arc<Mutex<StdRng>> = {
+        let rng = StdRng::from_rng(thread_rng()).unwrap();
+        Arc::new(Mutex::new(rng))
+    };
+}
 
 #[inline]
 pub fn degrees_to_radians(degrees: f64) -> f64 {
@@ -15,4 +26,27 @@ pub fn degrees_to_radians(degrees: f64) -> f64 {
 #[inline]
 pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
     x.max(min).min(max)
+}
+
+pub fn random_in_unit_sphere() -> Point3 {
+    loop {
+        let tmp = Point3::random(-1, 1);
+        if tmp.length_squared() < 1.0 {
+            return tmp;
+        }
+    }
+}
+
+pub fn random_unit_vector() -> Vec3 {
+    random_in_unit_sphere().unit_vector()
+}
+
+#[test]
+fn random_in_unit_sphere_test() {
+    let p = random_in_unit_sphere();
+    let mut flag = false;
+    if p.length_squared() < 1.0 {
+        flag = true;
+    }
+    assert_eq!(flag, true);
 }

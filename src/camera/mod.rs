@@ -7,8 +7,8 @@ pub struct Camera {
     lower_left_center: Vec3,
 }
 
-impl Camera {
-    pub fn new() -> Camera {
+impl Default for Camera {
+    fn default() -> Self {
         let aspect_ratio = 16.0 / 9.0;
         let viewport_height = 2.0;
         let viewport_width = aspect_ratio * viewport_height;
@@ -26,6 +26,12 @@ impl Camera {
             vertical,
             lower_left_center,
         }
+    }
+}
+
+impl Camera {
+    pub fn new() -> Camera {
+        Camera::default()
     }
 
     #[inline]
