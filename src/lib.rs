@@ -1,9 +1,9 @@
 pub use camera::Camera;
-pub use objects::{HitRecord, Hittable, HittableList, Sphere};
+pub use materials::{HitRecord, Hittable, HittableList, Lambertian, Material, Metal, Sphere};
 pub use vectors::{Color, Point3, Ray, Vec3};
 
 mod camera;
-mod objects;
+mod materials;
 mod vectors;
 
 use lazy_static::lazy_static;
@@ -39,6 +39,15 @@ pub fn random_in_unit_sphere() -> Point3 {
 
 pub fn random_unit_vector() -> Vec3 {
     random_in_unit_sphere().unit_vector()
+}
+
+pub fn random_in_hemisphere(normal: &Vec3) -> Point3 {
+    let in_unit_sphere = random_in_unit_sphere();
+    if in_unit_sphere.dot(normal) > 0.0 {
+        in_unit_sphere
+    } else {
+        -in_unit_sphere
+    }
 }
 
 #[test]

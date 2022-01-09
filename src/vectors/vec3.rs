@@ -1,4 +1,6 @@
-use std::ops;
+use std::ops::{self, Deref, DerefMut};
+
+const S: f64 = 1e-8;
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Vec3 {
@@ -37,6 +39,16 @@ impl Vec3 {
     pub fn length_squared(&self) -> f64 {
         self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2]
     }
+
+    #[inline]
+    pub fn near_zero(&self) -> bool {
+        self.e[0].abs() < S && self.e[1].abs() < S && self.e[2].abs() < S
+    }
+
+    #[inline]
+    pub fn reflect(&self, n: &Vec3) -> Vec3 {
+        *self - 2.0 * self.dot(n) * *n
+    }
 }
 
 impl PartialEq for Vec3 {
@@ -45,14 +57,17 @@ impl PartialEq for Vec3 {
     }
 }
 
-impl ops::Sub for Vec3 {
-    type Output = Vec3;
+impl Deref for Vec3 {
+    type Target = [f64; 3];
 
-    fn sub(mut self, rhs: Self) -> Self::Output {
-        for (i, e) in self.e.iter_mut().enumerate() {
-            *e -= rhs[i];
-        }
-        self
+    fn deref(&self) -> &Self::Target {
+        &self.e
+    }
+}
+
+impl DerefMut for Vec3 {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.e
     }
 }
 

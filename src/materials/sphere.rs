@@ -1,16 +1,21 @@
-use super::{HitRecord, Hittable};
+use std::rc::Rc;
+
+use super::{HitRecord, Hittable, Material};
 use crate::{Point3, Ray};
 
+#[derive(Default, Clone)]
 pub struct Sphere {
     center: Point3,
     radius: f64,
+    material: Option<Rc<Box<dyn Material>>>,
 }
 
 impl Sphere {
-    pub fn new(cen: Point3, r: f64) -> Self {
+    pub fn new(cen: Point3, r: f64, m: Rc<Box<dyn Material>>) -> Self {
         Self {
             center: cen,
             radius: r,
+            material: Some(m),
         }
     }
 }
@@ -41,6 +46,7 @@ impl Hittable for Sphere {
         rec.p = r.at(root);
         let outward_normal = (rec.p - self.center) / self.radius;
         rec.set_front_normal(r, &outward_normal);
+        rec.material = self.material.clone();
 
         true
     }

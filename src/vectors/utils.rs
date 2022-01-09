@@ -14,28 +14,48 @@ impl Display for Vec3 {
     }
 }
 
-impl ops::Add<Vec3> for Vec3 {
+impl ops::Add for Vec3 {
     type Output = Vec3;
 
-    fn add(self, rhs: Vec3) -> Self::Output {
-        Vec3::new(self[0] + rhs[0], self[1] + rhs[1], self[2] + rhs[2])
+    fn add(mut self, rhs: Vec3) -> Self::Output {
+        for (i, e) in self.iter_mut().enumerate() {
+            *e += rhs[i];
+        }
+        self
     }
 }
 
-impl ops::Mul<Vec3> for Vec3 {
+impl ops::Sub for Vec3 {
     type Output = Vec3;
 
-    fn mul(self, rhs: Vec3) -> Self::Output {
-        Vec3::new(self[0] * rhs[0], self[1] * rhs[1], self[2] * rhs[2])
+    fn sub(mut self, rhs: Self) -> Self::Output {
+        for (i, e) in self.iter_mut().enumerate() {
+            *e -= rhs[i];
+        }
+        self
+    }
+}
+
+impl ops::Mul for Vec3 {
+    type Output = Vec3;
+
+    fn mul(mut self, rhs: Vec3) -> Self::Output {
+        for (i, e) in self.iter_mut().enumerate() {
+            *e *= rhs[i];
+        }
+        self
     }
 }
 
 impl<T: Into<f64>> ops::Mul<T> for Vec3 {
     type Output = Vec3;
 
-    fn mul(self, rhs: T) -> Self::Output {
+    fn mul(mut self, rhs: T) -> Self::Output {
         let rhs = rhs.into();
-        Vec3::new(self[0] * rhs, self[1] * rhs, self[2] * rhs)
+        for (_, e) in self.iter_mut().enumerate() {
+            *e *= rhs;
+        }
+        self
     }
 }
 
@@ -59,7 +79,11 @@ impl<T: Into<f64>> ops::Div<T> for Vec3 {
 impl Vec3 {
     #[inline]
     pub fn dot(&self, rhs: &Self) -> f64 {
-        self[0] * rhs[0] + self[1] * rhs[1] + self[2] * rhs[2]
+        let mut res = 0.0;
+        for (i, e) in self.iter().enumerate() {
+            res += *e * rhs[i];
+        }
+        res
     }
 
     #[inline]

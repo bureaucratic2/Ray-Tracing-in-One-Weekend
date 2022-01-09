@@ -1,6 +1,6 @@
 use rand::Rng;
 use ray_tracing::{
-    random_unit_vector, Camera, Color, HitRecord, Hittable, HittableList, Point3, Ray, Sphere, Vec3,
+    Camera, Color, HitRecord, Hittable, HittableList, Lambertian, Metal, Point3, Ray, Sphere, Vec3,
 };
 use std::{fs::File, io::Write, rc::Rc};
 
@@ -16,8 +16,31 @@ fn main() {
     let camera = Camera::new();
 
     // World
-    let mut list = HittableList::new(Rc::new(Sphere::new(Point3::new(0, 0, -1), 0.5)));
-    list.add(Rc::new(Sphere::new(Point3::new(0, -100.5, -1), 100.0)));
+    let material_ground = Box::new(Lambertian::new(Color::new(0.8, 0.8, 0)));
+    let material_center = Box::new(Lambertian::new(Color::new(0.7, 0.3, 0.3)));
+    let material_left = Box::new(Metal::new(Color::new(0.8, 0.8, 0.8)));
+    let material_right = Box::new(Metal::new(Color::new(0.8, 0.6, 0.2)));
+
+    let mut world = HittableList::new(Rc::new(Sphere::new(
+        Point3::new(0, 0, -1),
+        0.5,
+        Rc::new(material_center),
+    )));
+    world.add(Rc::new(Sphere::new(
+        Point3::new(0, -100.5, -1),
+        100.0,
+        Rc::new(material_ground),
+    )));
+    world.add(Rc::new(Sphere::new(
+        Point3::new(-1, 0, -1),
+        0.5,
+        Rc::new(material_left),
+    )));
+    world.add(Rc::new(Sphere::new(
+        Point3::new(1, 0, -1),
+        0.5,
+        Rc::new(material_right),
+    )));
 
     let mut f = File::create("image.ppm").unwrap();
     f.write_all(format!("P3\n{} {}\n255\n", image_width, image_height).as_bytes())
@@ -33,7 +56,7 @@ fn main() {
                 let u = (i as f64 + rng.gen_range(0.0..1.0)) / (image_width - 1) as f64;
                 let v = (j as f64 + rng.gen_range(0.0..1.0)) / (image_height - 1) as f64;
                 let ray = camera.get_ray(u, v);
-                pixel_color += *ray_color(&ray, &list, max_depth);
+                pixel_color += *ray_color(&ray, &world, max_depth);
             }
             let pixel_color = Color::from(pixel_color);
 
@@ -54,12 +77,12 @@ fn ray_color(r: &Ray, world: &HittableList, depth: usize) -> Color {
 
     let mut rec = HitRecord::default();
     if world.hit(r, 0.001, f64::INFINITY, &mut rec) {
-        // // map each component(-1~1) to the interval from 0 to 1
-        // rec.normal += Vec3::new(1, 1, 1);
-        // rec.normal /= 2;
-        // return Color::from(rec.normal);
-        let target = rec.p + rec.normal + random_unit_vector();
-        return Color::from(0.5 * *ray_color(&Ray::new(rec.p, target - rec.p), world, depth - 1));
+        if let Some(ref material) = rec.material {
+            if let Some((attenuation, scattered)) = material.scatter(r, &rec) {
+                return Color::from(*attenuation * *ray_color(&scattered, world, depth - 1));
+            }
+        }
+        return Color::new(0, 0, 0);
     }
     let unit_direction = r.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
