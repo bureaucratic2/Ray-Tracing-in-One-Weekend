@@ -18,8 +18,8 @@ fn main() {
     // World
     let material_ground = Box::new(Lambertian::new(Color::new(0.8, 0.8, 0)));
     let material_center = Box::new(Lambertian::new(Color::new(0.7, 0.3, 0.3)));
-    let material_left = Box::new(Metal::new(Color::new(0.8, 0.8, 0.8)));
-    let material_right = Box::new(Metal::new(Color::new(0.8, 0.6, 0.2)));
+    let material_left = Box::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3));
+    let material_right = Box::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
 
     let mut world = HittableList::new(Rc::new(Sphere::new(
         Point3::new(0, 0, -1),

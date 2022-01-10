@@ -45,6 +45,7 @@ impl Vec3 {
         self.e[0].abs() < S && self.e[1].abs() < S && self.e[2].abs() < S
     }
 
+    #[must_use]
     #[inline]
     pub fn reflect(&self, n: &Vec3) -> Vec3 {
         *self - 2.0 * self.dot(n) * *n
