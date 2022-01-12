@@ -1,7 +1,7 @@
 use rand::Rng;
 use ray_tracing::{
-    Camera, Color, Dielectritic, HitRecord, Hittable, HittableList, Lambertian, Metal, Point3, Ray,
-    Sphere, Vec3,
+    Camera, Color, Dielectritic, HitRecord, Hittable, HittableList, Lambertian, Material, Metal,
+    Point3, Ray, Sphere, Vec3,
 };
 use std::{fs::File, io::Write, rc::Rc};
 
@@ -17,30 +17,40 @@ fn main() {
     let camera = Camera::new();
 
     // World
-    let material_ground = Box::new(Lambertian::new(Color::new(0.8, 0.8, 0)));
-    let material_center = Box::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
-    let material_left = Box::new(Dielectritic::new(1.5));
-    let material_right = Box::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0));
+    // walkaround Rust type inference
+    // reference: https://stackoverflow.com/questions/61972343/why-cant-i-push-into-a-vec-of-dyn-trait-unless-i-use-a-temporary-variable
+    let material_ground: Rc<Box<dyn Material>> =
+        Rc::new(Box::new(Lambertian::new(Color::new(0.8, 0.8, 0))));
+    let material_center: Rc<Box<dyn Material>> =
+        Rc::new(Box::new(Lambertian::new(Color::new(0.1, 0.2, 0.5))));
+    let material_left: Rc<Box<dyn Material>> = Rc::new(Box::new(Dielectritic::new(1.5)));
+    let material_right: Rc<Box<dyn Material>> =
+        Rc::new(Box::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0)));
 
     let mut world = HittableList::new(Rc::new(Sphere::new(
         Point3::new(0, 0, -1),
         0.5,
-        Rc::new(material_center),
+        Rc::clone(&material_center),
     )));
     world.add(Rc::new(Sphere::new(
         Point3::new(0, -100.5, -1),
         100.0,
-        Rc::new(material_ground),
+        Rc::clone(&material_ground),
     )));
     world.add(Rc::new(Sphere::new(
         Point3::new(-1, 0, -1),
-        -0.5,
-        Rc::new(material_left),
+        0.5,
+        Rc::clone(&material_left),
+    )));
+    world.add(Rc::new(Sphere::new(
+        Point3::new(-1, 0, -1),
+        -0.4,
+        Rc::clone(&material_left),
     )));
     world.add(Rc::new(Sphere::new(
         Point3::new(1, 0, -1),
         0.5,
-        Rc::new(material_right),
+        Rc::clone(&material_right),
     )));
 
     let mut f = File::create("image.ppm").unwrap();
