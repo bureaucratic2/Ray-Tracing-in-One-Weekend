@@ -1,5 +1,7 @@
 pub use camera::Camera;
-pub use materials::{HitRecord, Hittable, HittableList, Lambertian, Material, Metal, Sphere};
+pub use materials::{
+    Dielectritic, HitRecord, Hittable, HittableList, Lambertian, Material, Metal, Sphere,
+};
 pub use vectors::{Color, Point3, Ray, Vec3};
 
 mod camera;
@@ -26,6 +28,10 @@ pub fn degrees_to_radians(degrees: f64) -> f64 {
 #[inline]
 pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
     x.max(min).min(max)
+}
+
+pub fn random_double() -> f64 {
+    RAND.lock().unwrap().gen_range(0.0..1.0)
 }
 
 pub fn random_in_unit_sphere() -> Point3 {

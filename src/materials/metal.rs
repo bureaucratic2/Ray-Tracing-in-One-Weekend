@@ -1,4 +1,4 @@
-use crate::{random_in_unit_sphere, Color, HitRecord, Ray};
+use crate::{clamp, random_in_unit_sphere, Color, HitRecord, Ray};
 
 use super::Material;
 
@@ -11,7 +11,7 @@ impl Metal {
     pub fn new(c: Color, f: f64) -> Self {
         Self {
             albedo: c,
-            fuzz: if f > 1.0 { 1.0 } else { f },
+            fuzz: clamp(f, 0.0, 1.0),
         }
     }
 }

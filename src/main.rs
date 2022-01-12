@@ -1,6 +1,7 @@
 use rand::Rng;
 use ray_tracing::{
-    Camera, Color, HitRecord, Hittable, HittableList, Lambertian, Metal, Point3, Ray, Sphere, Vec3,
+    Camera, Color, Dielectritic, HitRecord, Hittable, HittableList, Lambertian, Metal, Point3, Ray,
+    Sphere, Vec3,
 };
 use std::{fs::File, io::Write, rc::Rc};
 
@@ -17,9 +18,9 @@ fn main() {
 
     // World
     let material_ground = Box::new(Lambertian::new(Color::new(0.8, 0.8, 0)));
-    let material_center = Box::new(Lambertian::new(Color::new(0.7, 0.3, 0.3)));
-    let material_left = Box::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3));
-    let material_right = Box::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
+    let material_center = Box::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    let material_left = Box::new(Dielectritic::new(1.5));
+    let material_right = Box::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0));
 
     let mut world = HittableList::new(Rc::new(Sphere::new(
         Point3::new(0, 0, -1),
@@ -33,7 +34,7 @@ fn main() {
     )));
     world.add(Rc::new(Sphere::new(
         Point3::new(-1, 0, -1),
-        0.5,
+        -0.5,
         Rc::new(material_left),
     )));
     world.add(Rc::new(Sphere::new(

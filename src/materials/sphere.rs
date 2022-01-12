@@ -45,7 +45,7 @@ impl Hittable for Sphere {
         rec.t = root;
         rec.p = r.at(root);
         let outward_normal = (rec.p - self.center) / self.radius;
-        rec.set_front_normal(r, &outward_normal);
+        rec.set_face_normal(r, &outward_normal);
         rec.material = self.material.clone();
 
         true
