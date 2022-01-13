@@ -56,6 +56,17 @@ pub fn random_in_hemisphere(normal: &Vec3) -> Point3 {
     }
 }
 
+pub fn random_unit_in_disk() -> Point3 {
+    let mut rng = RAND.lock().unwrap();
+    loop {
+        let p = Point3::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0);
+        if p.length() > 1.0 {
+            continue;
+        }
+        return p;
+    }
+}
+
 #[test]
 fn random_in_unit_sphere_test() {
     let p = random_in_unit_sphere();

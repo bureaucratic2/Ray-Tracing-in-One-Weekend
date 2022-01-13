@@ -14,7 +14,18 @@ fn main() {
     let max_depth = 50;
 
     // Camera
-    let camera = Camera::new();
+    let look_from = Point3::new(3, 3, 2);
+    let look_at = Point3::new(0, 0, -1);
+    let dist_to_focus = (look_from - look_at).length();
+    let camera = Camera::new(
+        look_from,
+        look_at,
+        Vec3::new(0, 1, 0),
+        20.0,
+        aspect_ratio,
+        2.0,
+        dist_to_focus,
+    );
 
     // World
     // walkaround Rust type inference
@@ -23,14 +34,20 @@ fn main() {
         Rc::new(Box::new(Lambertian::new(Color::new(0.8, 0.8, 0))));
     let material_center: Rc<Box<dyn Material>> =
         Rc::new(Box::new(Lambertian::new(Color::new(0.1, 0.2, 0.5))));
+
     let material_left: Rc<Box<dyn Material>> = Rc::new(Box::new(Dielectritic::new(1.5)));
     let material_right: Rc<Box<dyn Material>> =
         Rc::new(Box::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0)));
 
     let mut world = HittableList::new(Rc::new(Sphere::new(
-        Point3::new(0, 0, -1),
+        Point3::new(-1, 0, -1),
         0.5,
-        Rc::clone(&material_center),
+        Rc::clone(&material_left),
+    )));
+    world.add(Rc::new(Sphere::new(
+        Point3::new(-1, 0, -1),
+        -0.45,
+        Rc::clone(&material_left),
     )));
     world.add(Rc::new(Sphere::new(
         Point3::new(0, -100.5, -1),
@@ -38,14 +55,9 @@ fn main() {
         Rc::clone(&material_ground),
     )));
     world.add(Rc::new(Sphere::new(
-        Point3::new(-1, 0, -1),
+        Point3::new(0, 0, -1),
         0.5,
-        Rc::clone(&material_left),
-    )));
-    world.add(Rc::new(Sphere::new(
-        Point3::new(-1, 0, -1),
-        -0.4,
-        Rc::clone(&material_left),
+        Rc::clone(&material_center),
     )));
     world.add(Rc::new(Sphere::new(
         Point3::new(1, 0, -1),
