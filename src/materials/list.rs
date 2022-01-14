@@ -5,10 +5,6 @@ use crate::{HitRecord, Hittable, Ray};
 #[derive(Default)]
 pub struct HittableList(Vec<Arc<dyn Hittable>>);
 
-// I'm sure that there is no possibility of undefined behavior (including data races)
-// when passing &HittableList between threads, so unsafely implement Sync for HittableList.
-unsafe impl Sync for HittableList {}
-
 impl HittableList {
     pub fn new(hittable: Arc<dyn Hittable>) -> Self {
         let mut list = HittableList::default();

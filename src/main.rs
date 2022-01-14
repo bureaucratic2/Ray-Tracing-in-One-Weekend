@@ -1,4 +1,3 @@
-use lazy_static::lazy_static;
 use rand::prelude::*;
 use ray_tracing::{
     Camera, Color, Dielectritic, HitRecord, Hittable, HittableList, Lambertian, Material, Metal,
@@ -10,11 +9,6 @@ use std::{
     io::{BufWriter, Write},
     sync::Arc,
 };
-
-// WORLD is read-only
-lazy_static! {
-    static ref WORLD: HittableList = random_scene();
-}
 
 fn random_scene() -> HittableList {
     let mut world = HittableList::default();
@@ -119,6 +113,9 @@ fn main() {
     f.write_all(format!("P3\n{} {}\n255\n", image_width, image_height).as_bytes())
         .unwrap();
 
+    // World
+    let world = random_scene();
+
     // Render
     let image = (0..image_height)
         .into_par_iter()
@@ -133,7 +130,7 @@ fn main() {
                     let u = (i as f64 + rng.gen_range(0.0..1.0)) / (image_width - 1) as f64;
                     let v = (j as f64 + rng.gen_range(0.0..1.0)) / (image_height - 1) as f64;
                     let ray = camera.get_ray(&mut rng, u, v);
-                    pixel_color += *ray_color(&ray, &WORLD, max_depth);
+                    pixel_color += *ray_color(&ray, &world, max_depth);
                 }
                 line.push(Color::from(pixel_color));
             }
