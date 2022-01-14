@@ -12,3 +12,4 @@ Cargo.lock
 # Test&debug output
 *.log
 *.ppm
+*.out

@@ -1,69 +1,115 @@
 use rand::Rng;
 use ray_tracing::{
-    Camera, Color, Dielectritic, HitRecord, Hittable, HittableList, Lambertian, Material, Metal,
-    Point3, Ray, Sphere, Vec3,
+    initialize_rng, random_double, Camera, Color, Dielectritic, HitRecord, Hittable, HittableList,
+    Lambertian, Material, Metal, Point3, Ray, Sphere, Vec3,
 };
 use std::{fs::File, io::Write, rc::Rc};
 
+fn random_scene() -> HittableList {
+    // initialize global rng
+    unsafe {
+        initialize_rng();
+    }
+
+    let mut world = HittableList::default();
+
+    let ground_material: Rc<Box<dyn Material>> =
+        Rc::new(Box::new(Lambertian::new(Color::new(0.5, 0.5, 0.5))));
+    world.add(Rc::new(Sphere::new(
+        Point3::new(0, -1000, 0),
+        1000.0,
+        Rc::clone(&ground_material),
+    )));
+
+    let fixed_p = Point3::new(4, 0.2, 0);
+    let mut rng = rand::thread_rng();
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat: f64 = rng.gen_range(0.0..1.0);
+            let center = Point3::new(
+                a as f64 + 0.9 * rng.gen_range(0.0..1.0),
+                0.2,
+                b as f64 + 0.9 * rng.gen_range(0.0..1.0),
+            );
+
+            if (center - fixed_p).length() > 0.9 {
+                // walkaround Rust type inference
+                // reference: https://stackoverflow.com/questions/61972343/why-cant-i-push-into-a-vec-of-dyn-trait-unless-i-use-a-temporary-variable
+                let sphere_material: Rc<Box<dyn Material>> = if choose_mat < 0.8 {
+                    // diffuse
+                    let albedo = Color::from(Vec3::random(0, 1) * Vec3::random(0, 1));
+                    Rc::new(Box::new(Lambertian::new(albedo)))
+                } else if choose_mat < 0.95 {
+                    // metal
+                    let albedo = Color::from(Vec3::random(0.5, 1));
+                    let fuzz = random_double();
+                    Rc::new(Box::new(Metal::new(albedo, fuzz)))
+                } else {
+                    // glass
+                    Rc::new(Box::new(Dielectritic::new(1.5)))
+                };
+
+                world.add(Rc::new(Sphere::new(
+                    center,
+                    0.2,
+                    Rc::clone(&sphere_material),
+                )));
+            }
+        }
+    }
+
+    let material1: Rc<Box<dyn Material>> = Rc::new(Box::new(Dielectritic::new(1.5)));
+    world.add(Rc::new(Sphere::new(
+        Point3::new(0, 1, 0),
+        1.0,
+        Rc::clone(&material1),
+    )));
+
+    let material2: Rc<Box<dyn Material>> =
+        Rc::new(Box::new(Lambertian::new(Color::new(0.4, 0.2, 0.1))));
+    world.add(Rc::new(Sphere::new(
+        Point3::new(-4, 1, 0),
+        1.0,
+        Rc::clone(&material2),
+    )));
+
+    let material3: Rc<Box<dyn Material>> =
+        Rc::new(Box::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0)));
+    world.add(Rc::new(Sphere::new(
+        Point3::new(4, 1, 0),
+        1.0,
+        Rc::clone(&material3),
+    )));
+
+    world
+}
+
 fn main() {
     // Image
-    let aspect_ratio = 16.0 / 9.0;
-    let image_width = 400u64;
-    let image_height = (400_f64 / aspect_ratio) as u64;
-    let samples_per_pixel = 100;
+    let aspect_ratio = 3.0 / 2.0;
+    let image_width = 1200u64;
+    let image_height = (image_width as f64 / aspect_ratio) as u64;
+    let samples_per_pixel = 500;
     let max_depth = 50;
 
     // Camera
-    let look_from = Point3::new(3, 3, 2);
-    let look_at = Point3::new(0, 0, -1);
-    let dist_to_focus = (look_from - look_at).length();
+    let look_from = Point3::new(13, 2, 3);
+    let look_at = Point3::new(0, 0, 0);
+    let vup = Vec3::new(0, 1, 0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
     let camera = Camera::new(
         look_from,
         look_at,
-        Vec3::new(0, 1, 0),
+        vup,
         20.0,
         aspect_ratio,
-        2.0,
+        aperture,
         dist_to_focus,
     );
 
     // World
-    // walkaround Rust type inference
-    // reference: https://stackoverflow.com/questions/61972343/why-cant-i-push-into-a-vec-of-dyn-trait-unless-i-use-a-temporary-variable
-    let material_ground: Rc<Box<dyn Material>> =
-        Rc::new(Box::new(Lambertian::new(Color::new(0.8, 0.8, 0))));
-    let material_center: Rc<Box<dyn Material>> =
-        Rc::new(Box::new(Lambertian::new(Color::new(0.1, 0.2, 0.5))));
-
-    let material_left: Rc<Box<dyn Material>> = Rc::new(Box::new(Dielectritic::new(1.5)));
-    let material_right: Rc<Box<dyn Material>> =
-        Rc::new(Box::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0)));
-
-    let mut world = HittableList::new(Rc::new(Sphere::new(
-        Point3::new(-1, 0, -1),
-        0.5,
-        Rc::clone(&material_left),
-    )));
-    world.add(Rc::new(Sphere::new(
-        Point3::new(-1, 0, -1),
-        -0.45,
-        Rc::clone(&material_left),
-    )));
-    world.add(Rc::new(Sphere::new(
-        Point3::new(0, -100.5, -1),
-        100.0,
-        Rc::clone(&material_ground),
-    )));
-    world.add(Rc::new(Sphere::new(
-        Point3::new(0, 0, -1),
-        0.5,
-        Rc::clone(&material_center),
-    )));
-    world.add(Rc::new(Sphere::new(
-        Point3::new(1, 0, -1),
-        0.5,
-        Rc::clone(&material_right),
-    )));
+    let world = random_scene();
 
     let mut f = File::create("image.ppm").unwrap();
     f.write_all(format!("P3\n{} {}\n255\n", image_width, image_height).as_bytes())
@@ -82,15 +128,11 @@ fn main() {
                 pixel_color += *ray_color(&ray, &world, max_depth);
             }
             let pixel_color = Color::from(pixel_color);
-
-            // f.write_all(format!("{}", color).as_bytes()).unwrap();
             write_color(&mut f, pixel_color, samples_per_pixel);
         }
     }
 
     eprintln!("Done");
-
-    println!("Hooray! This is the graphics \"hello world\".");
 }
 
 fn ray_color(r: &Ray, world: &HittableList, depth: usize) -> Color {
