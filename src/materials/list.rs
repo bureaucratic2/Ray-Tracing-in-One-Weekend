@@ -1,7 +1,6 @@
 use std::{mem, rc::Rc};
 
-use super::{HitRecord, Hittable};
-use crate::Ray;
+use crate::{HitRecord, Hittable, Ray};
 
 #[derive(Default)]
 pub struct HittableList(Vec<Rc<dyn Hittable>>);

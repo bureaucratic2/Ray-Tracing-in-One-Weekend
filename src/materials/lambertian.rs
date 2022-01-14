@@ -1,6 +1,4 @@
-use crate::{random_unit_vector, Color, Ray};
-
-use super::{HitRecord, Material};
+use crate::{random_unit_vector, Color, HitRecord, Material, Ray};
 
 pub struct Lambertian {
     albedo: Color,

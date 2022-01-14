@@ -1,11 +1,11 @@
 pub use camera::Camera;
-pub use materials::{
-    Dielectritic, HitRecord, Hittable, HittableList, Lambertian, Material, Metal, Sphere,
-};
+pub use materials::{Dielectritic, HittableList, Lambertian, Material, Metal};
+pub use objects::{HitRecord, Hittable, Sphere};
 pub use vectors::{Color, Point3, Ray, Vec3};
 
 mod camera;
 mod materials;
+mod objects;
 mod vectors;
 
 use rand::prelude::*;
@@ -13,12 +13,18 @@ use std::f64::consts::PI;
 
 static mut RAND: Option<StdRng> = None;
 
+/// # Safety
+///
+/// Initialize static thread rng
 pub unsafe fn initialize_rng() {
     if RAND.is_none() {
         RAND = Some(StdRng::from_rng(thread_rng()).unwrap());
     }
 }
 
+/// # Safety
+///
+/// Return mutable thread-local rng reference to caculate random points
 #[inline]
 pub unsafe fn rng() -> &'static mut StdRng {
     RAND.as_mut().unwrap()
