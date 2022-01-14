@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use super::{HitRecord, Hittable, Material};
 use crate::{Point3, Ray};
@@ -7,11 +7,11 @@ use crate::{Point3, Ray};
 pub struct Sphere {
     center: Point3,
     radius: f64,
-    material: Option<Rc<Box<dyn Material>>>,
+    material: Option<Arc<Box<dyn Material>>>,
 }
 
 impl Sphere {
-    pub fn new(cen: Point3, r: f64, m: Rc<Box<dyn Material>>) -> Self {
+    pub fn new(cen: Point3, r: f64, m: Arc<Box<dyn Material>>) -> Self {
         Self {
             center: cen,
             radius: r,

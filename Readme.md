@@ -1,11 +1,21 @@
 ## Ray Tracing in One Weekend
 This is an implementation of [Peter Shirley's "Ray Tracing In One Weekend"](https://raytracing.github.io/books/RayTracingInOneWeekend.html) book in Rust after a painful C++ implementation experience.
 
-Although I wrap almost all random number function calls in library, for performance reasons, I still use a `thread_rng()` call in `main.rs` instead of multiple dangerous unsafe function calls. So [`rand`](https://crates.io/crates/rand) dependency is needed. Besides, this library is intended for single thread context due to the unprotected rng in `lib.rs`: 
+This is a parallelized implementation, single-threaded implementation is refered to `master` branch.
+
+In this implementation, each material has exclusive sharded mutex rng instead of a global unsafe rng:
 ```rust
-static mut RAND: Option<StdRng> = None;
+static ref RAND: Arc<Vec<Mutex<StdRng>>> = {
+        let mut v = vec![];
+        for _ in 0..LEN_OF_RNG {
+            v.push(Mutex::new(StdRng::from_rng(thread_rng()).unwrap()));
+        }
+        Arc::new(v)
+    };
 ```
-I've tried to use Mutex and Arc to protect it, but the performance lost is unacceptable (about 90%, not joke). I'll explore some new ways to make this crate parallelism.
+Besides, each instance has `id` field to map an instance to a mutex to reduce conflict.
+
+`LEN_OF_RNG` can be increased to improve performance if there are too many instances. In this project, each material has only 20 instances, so `LEN_OF_RNG = 5` is a suitable choice.
 
 ### Cover
 ![ray-tracing](image.png)

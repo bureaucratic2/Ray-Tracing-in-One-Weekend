@@ -1,5 +1,5 @@
 use crate::{Material, Point3, Ray, Vec3};
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub use sphere::Sphere;
 
@@ -11,7 +11,7 @@ pub struct HitRecord {
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
-    pub material: Option<Rc<Box<dyn Material>>>,
+    pub material: Option<Arc<Box<dyn Material>>>,
 }
 
 impl HitRecord {

@@ -1,28 +1,34 @@
-use rand::Rng;
+use lazy_static::lazy_static;
+use rand::prelude::*;
 use ray_tracing::{
-    initialize_rng, random_double, Camera, Color, Dielectritic, HitRecord, Hittable, HittableList,
-    Lambertian, Material, Metal, Point3, Ray, Sphere, Vec3,
+    Camera, Color, Dielectritic, HitRecord, Hittable, HittableList, Lambertian, Material, Metal,
+    Point3, Ray, Sphere, Vec3,
 };
-use std::{fs::File, io::Write, rc::Rc};
+use rayon::prelude::*;
+use std::{
+    fs::File,
+    io::{BufWriter, Write},
+    sync::Arc,
+};
+
+// WORLD is read-only
+lazy_static! {
+    static ref WORLD: HittableList = random_scene();
+}
 
 fn random_scene() -> HittableList {
-    // initialize global rng
-    unsafe {
-        initialize_rng();
-    }
-
     let mut world = HittableList::default();
 
-    let ground_material: Rc<Box<dyn Material>> =
-        Rc::new(Box::new(Lambertian::new(Color::new(0.5, 0.5, 0.5))));
-    world.add(Rc::new(Sphere::new(
+    let ground_material: Arc<Box<dyn Material>> =
+        Arc::new(Box::new(Lambertian::new(Color::new(0.5, 0.5, 0.5))));
+    world.add(Arc::new(Sphere::new(
         Point3::new(0, -1000, 0),
         1000.0,
-        Rc::clone(&ground_material),
+        Arc::clone(&ground_material),
     )));
 
     let fixed_p = Point3::new(4, 0.2, 0);
-    let mut rng = rand::thread_rng();
+    let mut rng = StdRng::from_rng(thread_rng()).unwrap();
     for a in -11..11 {
         for b in -11..11 {
             let choose_mat: f64 = rng.gen_range(0.0..1.0);
@@ -35,50 +41,51 @@ fn random_scene() -> HittableList {
             if (center - fixed_p).length() > 0.9 {
                 // walkaround Rust type inference
                 // reference: https://stackoverflow.com/questions/61972343/why-cant-i-push-into-a-vec-of-dyn-trait-unless-i-use-a-temporary-variable
-                let sphere_material: Rc<Box<dyn Material>> = if choose_mat < 0.8 {
+                let sphere_material: Arc<Box<dyn Material>> = if choose_mat < 0.8 {
                     // diffuse
-                    let albedo = Color::from(Vec3::random(0, 1) * Vec3::random(0, 1));
-                    Rc::new(Box::new(Lambertian::new(albedo)))
+                    let albedo =
+                        Color::from(Vec3::random(&mut rng, 0, 1) * Vec3::random(&mut rng, 0, 1));
+                    Arc::new(Box::new(Lambertian::new(albedo)))
                 } else if choose_mat < 0.95 {
                     // metal
-                    let albedo = Color::from(Vec3::random(0.5, 1));
-                    let fuzz = random_double();
-                    Rc::new(Box::new(Metal::new(albedo, fuzz)))
+                    let albedo = Color::from(Vec3::random(&mut rng, 0.5, 1));
+                    let fuzz = rng.gen_range(0.0..1.0);
+                    Arc::new(Box::new(Metal::new(albedo, fuzz)))
                 } else {
                     // glass
-                    Rc::new(Box::new(Dielectritic::new(1.5)))
+                    Arc::new(Box::new(Dielectritic::new(1.5)))
                 };
 
-                world.add(Rc::new(Sphere::new(
+                world.add(Arc::new(Sphere::new(
                     center,
                     0.2,
-                    Rc::clone(&sphere_material),
+                    Arc::clone(&sphere_material),
                 )));
             }
         }
     }
 
-    let material1: Rc<Box<dyn Material>> = Rc::new(Box::new(Dielectritic::new(1.5)));
-    world.add(Rc::new(Sphere::new(
+    let material1: Arc<Box<dyn Material>> = Arc::new(Box::new(Dielectritic::new(1.5)));
+    world.add(Arc::new(Sphere::new(
         Point3::new(0, 1, 0),
         1.0,
-        Rc::clone(&material1),
+        Arc::clone(&material1),
     )));
 
-    let material2: Rc<Box<dyn Material>> =
-        Rc::new(Box::new(Lambertian::new(Color::new(0.4, 0.2, 0.1))));
-    world.add(Rc::new(Sphere::new(
+    let material2: Arc<Box<dyn Material>> =
+        Arc::new(Box::new(Lambertian::new(Color::new(0.4, 0.2, 0.1))));
+    world.add(Arc::new(Sphere::new(
         Point3::new(-4, 1, 0),
         1.0,
-        Rc::clone(&material2),
+        Arc::clone(&material2),
     )));
 
-    let material3: Rc<Box<dyn Material>> =
-        Rc::new(Box::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0)));
-    world.add(Rc::new(Sphere::new(
+    let material3: Arc<Box<dyn Material>> =
+        Arc::new(Box::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0)));
+    world.add(Arc::new(Sphere::new(
         Point3::new(4, 1, 0),
         1.0,
-        Rc::clone(&material3),
+        Arc::clone(&material3),
     )));
 
     world
@@ -87,8 +94,8 @@ fn random_scene() -> HittableList {
 fn main() {
     // Image
     let aspect_ratio = 3.0 / 2.0;
-    let image_width = 1200u64;
-    let image_height = (image_width as f64 / aspect_ratio) as u64;
+    let image_width = 1200u32;
+    let image_height = (image_width as f64 / aspect_ratio) as u32;
     let samples_per_pixel = 500;
     let max_depth = 50;
 
@@ -108,30 +115,39 @@ fn main() {
         dist_to_focus,
     );
 
-    // World
-    let world = random_scene();
-
-    let mut f = File::create("image.ppm").unwrap();
+    let mut f = BufWriter::new(File::create("image.ppm").unwrap());
     f.write_all(format!("P3\n{} {}\n255\n", image_width, image_height).as_bytes())
         .unwrap();
 
     // Render
-    let mut rng = rand::thread_rng();
-    for j in (0..image_height).rev() {
-        eprintln!("Scanlines remaining: {}", j);
-        for i in 0..image_width {
-            let mut pixel_color = Vec3::default();
-            for _ in 0..samples_per_pixel {
-                let u = (i as f64 + rng.gen_range(0.0..1.0)) / (image_width - 1) as f64;
-                let v = (j as f64 + rng.gen_range(0.0..1.0)) / (image_height - 1) as f64;
-                let ray = camera.get_ray(u, v);
-                pixel_color += *ray_color(&ray, &world, max_depth);
+    let image = (0..image_height)
+        .into_par_iter()
+        .rev()
+        .map(|j| {
+            eprintln!("Scanline: {}", j);
+            let mut rng = StdRng::from_rng(thread_rng()).unwrap();
+            let mut line = vec![];
+            for i in 0..image_width {
+                let mut pixel_color = Vec3::default();
+                for _ in 0..samples_per_pixel {
+                    let u = (i as f64 + rng.gen_range(0.0..1.0)) / (image_width - 1) as f64;
+                    let v = (j as f64 + rng.gen_range(0.0..1.0)) / (image_height - 1) as f64;
+                    let ray = camera.get_ray(&mut rng, u, v);
+                    pixel_color += *ray_color(&ray, &WORLD, max_depth);
+                }
+                line.push(Color::from(pixel_color));
             }
-            let pixel_color = Color::from(pixel_color);
-            write_color(&mut f, pixel_color, samples_per_pixel);
+            line
+        })
+        .collect::<Vec<_>>();
+
+    for line in image {
+        for c in line {
+            write_color(&mut f, c, samples_per_pixel);
         }
     }
 
+    f.flush().unwrap();
     eprintln!("Done");
 }
 

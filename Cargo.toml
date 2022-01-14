@@ -7,6 +7,8 @@ edition = "2021"
 
 [dependencies]
 rand = {version = "0.8.4"}
+lazy_static = "1.4"
+rayon = "1.5"
 
 [lib]
 doctest = false

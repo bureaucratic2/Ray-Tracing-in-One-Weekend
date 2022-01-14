@@ -1,6 +1,5 @@
-use crate::rng;
 use crate::vectors::vec3::Vec3;
-use rand::Rng;
+use rand::{prelude::StdRng, Rng};
 
 use std::{
     fmt::{self, Display},
@@ -103,8 +102,7 @@ impl Vec3 {
     }
 
     #[inline]
-    pub fn random<T: Into<f64>, U: Into<f64>>(min: T, max: U) -> Self {
-        let rng = unsafe { rng() };
+    pub fn random<T: Into<f64>, U: Into<f64>>(rng: &mut StdRng, min: T, max: U) -> Self {
         let min: f64 = min.into();
         let max: f64 = max.into();
         Vec3::new(

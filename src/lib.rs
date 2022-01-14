@@ -11,24 +11,7 @@ mod vectors;
 use rand::prelude::*;
 use std::f64::consts::PI;
 
-static mut RAND: Option<StdRng> = None;
-
-/// # Safety
-///
-/// Initialize static thread rng
-pub unsafe fn initialize_rng() {
-    if RAND.is_none() {
-        RAND = Some(StdRng::from_rng(thread_rng()).unwrap());
-    }
-}
-
-/// # Safety
-///
-/// Return mutable thread-local rng reference to caculate random points
-#[inline]
-pub unsafe fn rng() -> &'static mut StdRng {
-    RAND.as_mut().unwrap()
-}
+static LEN_OF_RNG: usize = 5;
 
 #[inline]
 pub fn degrees_to_radians(degrees: f64) -> f64 {
@@ -40,27 +23,21 @@ pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
     x.max(min).min(max)
 }
 
-#[inline]
-pub fn random_double() -> f64 {
-    let rng = unsafe { rng() };
-    rng.gen_range(0.0..1.0)
-}
-
-pub fn random_in_unit_sphere() -> Point3 {
+pub fn random_in_unit_sphere(rng: &mut StdRng) -> Point3 {
     loop {
-        let tmp = Point3::random(-1, 1);
+        let tmp = Point3::random(rng, -1, 1);
         if tmp.length_squared() < 1.0 {
             return tmp;
         }
     }
 }
 
-pub fn random_unit_vector() -> Vec3 {
-    random_in_unit_sphere().unit_vector()
+pub fn random_unit_vector(rng: &mut StdRng) -> Vec3 {
+    random_in_unit_sphere(rng).unit_vector()
 }
 
-pub fn random_in_hemisphere(normal: &Vec3) -> Point3 {
-    let in_unit_sphere = random_in_unit_sphere();
+pub fn random_in_hemisphere(rng: &mut StdRng, normal: &Vec3) -> Point3 {
+    let in_unit_sphere = random_in_unit_sphere(rng);
     if in_unit_sphere.dot(normal) > 0.0 {
         in_unit_sphere
     } else {
@@ -68,8 +45,7 @@ pub fn random_in_hemisphere(normal: &Vec3) -> Point3 {
     }
 }
 
-pub fn random_unit_in_disk() -> Point3 {
-    let rng = unsafe { rng() };
+pub fn random_unit_in_disk(rng: &mut StdRng) -> Point3 {
     loop {
         let p = Point3::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0);
         if p.length() > 1.0 {
@@ -77,14 +53,4 @@ pub fn random_unit_in_disk() -> Point3 {
         }
         return p;
     }
-}
-
-#[test]
-fn random_in_unit_sphere_test() {
-    let p = random_in_unit_sphere();
-    let mut flag = false;
-    if p.length_squared() < 1.0 {
-        flag = true;
-    }
-    assert_eq!(flag, true);
 }

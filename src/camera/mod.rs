@@ -1,3 +1,5 @@
+use rand::prelude::*;
+
 use crate::{degrees_to_radians, random_unit_in_disk, Point3, Ray, Vec3};
 
 pub struct Camera {
@@ -62,9 +64,9 @@ impl Camera {
     }
 
     #[inline]
-    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
+    pub fn get_ray(&self, rng: &mut StdRng, u: f64, v: f64) -> Ray {
         if self.defocus {
-            let rd = self.lens_radius * random_unit_in_disk();
+            let rd = self.lens_radius * random_unit_in_disk(rng);
             let offset = self.u * rd.x() + self.v * rd.y();
             Ray::new(
                 self.origin + offset,
